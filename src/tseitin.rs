@@ -1,8 +1,8 @@
 use std::collections::BTreeSet;
 use std::hint::unreachable_unchecked;
 
-use crate::nnf::macros::*;
 use crate::nnf::Nnf;
+use crate::or;
 
 pub struct TseitinTransform<A, V> {
     aux_factory: A,
@@ -98,10 +98,10 @@ impl<A, V> TseitinTransform<A, V>
 mod tests {
     use std::collections::BTreeSet;
 
-    use crate::nnf::macros::{and, or, var};
     use crate::nnf::Nnf;
     use crate::traits::Render;
     use crate::tseitin::TseitinTransform;
+    use crate::{and, or, var};
 
     fn transform(sentence: Nnf<&'static str>) -> Nnf<&'static str> {
         let mut counter = 0;

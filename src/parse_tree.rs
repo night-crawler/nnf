@@ -1,6 +1,6 @@
 use std::ops::{BitAnd, BitOr, Not};
 
-use crate::parse_tree::macros::{e_and, e_leaf, e_or};
+use crate::{e_and, e_leaf, e_or};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum ExpressionNode<T> {
@@ -63,40 +63,39 @@ impl<T: Not<Output=T>> ExpressionNode<T> {
 
 #[allow(unused_macros)]
 pub mod macros {
+    #[macro_export]
     macro_rules! e_leaf {
         ($node:expr) => {
             $crate::parse_tree::ExpressionNode::Leaf($node)
         };
     }
 
+    #[macro_export]
     macro_rules! e_not {
         ($node:expr) => {
             $crate::parse_tree::ExpressionNode::Not($node.into())
         };
     }
 
+    #[macro_export]
     macro_rules! e_or {
         ($left:expr, $right:expr) => {
             $crate::parse_tree::ExpressionNode::Or($left.into(), $right.into())
         };
     }
 
+    #[macro_export]
     macro_rules! e_and {
         ($left:expr, $right:expr) => {
             $crate::parse_tree::ExpressionNode::And($left.into(), $right.into())
         };
     }
-
-    pub(crate) use e_and;
-    pub(crate) use e_leaf;
-    pub(crate) use e_not;
-    pub(crate) use e_or;
 }
 
 #[cfg(test)]
 mod test {
+    use crate::{e_and, e_leaf, e_not, e_or};
     use crate::parse_tree::ExpressionNode;
-    use crate::parse_tree::macros::{e_and, e_leaf, e_not, e_or};
 
     #[test]
     fn test_to_nnf() {

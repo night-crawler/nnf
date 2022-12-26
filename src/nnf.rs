@@ -2,8 +2,8 @@ use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::{BitAnd, BitOr, Not};
+use crate::{and, or};
 
-use crate::nnf::macros::{and, or};
 
 #[derive(Debug, Clone)]
 pub enum Nnf<V> {
@@ -312,8 +312,8 @@ impl<V: Display> Display for Nnf<V> {
     }
 }
 
-
 pub mod macros {
+    #[macro_export]
     macro_rules! var {
         ($name:literal) => {
             if $name.starts_with("!") {
@@ -330,6 +330,7 @@ pub mod macros {
         };
     }
 
+    #[macro_export]
     macro_rules! or {
         (
             $($expression:literal),+
@@ -359,6 +360,7 @@ pub mod macros {
 
     }
 
+    #[macro_export]
     macro_rules! and {
         (
             $($expression:literal),+
@@ -386,17 +388,13 @@ pub mod macros {
             })
         };
     }
-
-    pub(crate) use and;
-    pub(crate) use or;
-    pub(crate) use var;
 }
 
 
 #[cfg(test)]
 mod test {
     use std::ops::Not;
-    use crate::nnf::macros::*;
+    use crate::*;
 
     #[test]
     fn test_bit_and_operators() {
