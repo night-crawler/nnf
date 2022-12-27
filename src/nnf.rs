@@ -1,9 +1,11 @@
 use std::cmp::Ordering;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::{BitAnd, BitOr, Not};
-use crate::{and, or};
 
+use crate::{and, or};
+use crate::traits::{BuildTruthTable};
+use crate::truth_table::TruthTable;
 
 #[derive(Debug, Clone)]
 pub enum Nnf<V> {
@@ -56,7 +58,7 @@ impl<V: Eq + Ord> Ord for Nnf<V> {
     }
 }
 
-impl<V: Ord + PartialOrd + Clone> Nnf<V> {
+impl<V: Ord> Nnf<V> {
     pub fn or<I: IntoIterator<Item=Nnf<V>>>(iter: I) -> Self {
         Nnf::Or(BTreeSet::from_iter(iter))
     }
@@ -100,6 +102,40 @@ impl<V: Ord + PartialOrd + Clone> Nnf<V> {
         }
     }
 
+    pub fn extract_vars(&self) -> BTreeSet<&V> {
+        let mut vars = BTreeSet::default();
+        self.extract_vars_internal(&mut vars);
+        vars
+    }
+
+    fn extract_vars_internal<'a>(&'a self, vars: &mut BTreeSet<&'a V>) {
+        match self {
+            Nnf::Var(filter, _) => {
+                vars.insert(filter);
+            }
+            Nnf::And(children) | Nnf::Or(children) => {
+                children.iter().for_each(|child| child.extract_vars_internal(vars));
+            }
+        }
+    }
+
+    fn evaluate_with(&self, index_map: &BTreeMap<&V, usize>, arrangement: u128) -> bool {
+        match self {
+            Nnf::Var(filter, value) => {
+                let index = *index_map.get(filter).unwrap();
+                (arrangement & (1 << index) != 0) == *value
+            }
+            Nnf::And(children) => {
+                children.iter().all(|child| child.evaluate_with(index_map, arrangement))
+            }
+            Nnf::Or(children) => {
+                children.iter().any(|child| child.evaluate_with(index_map, arrangement))
+            }
+        }
+    }
+}
+
+impl<V: Ord + Clone> Nnf<V> {
     pub fn has_inversions(&self) -> bool {
         let children = match self {
             Nnf::Var(_, _) => return false,
@@ -113,24 +149,6 @@ impl<V: Ord + PartialOrd + Clone> Nnf<V> {
         }
 
         false
-    }
-
-    pub fn export_vars(&self) -> Vec<&Nnf<V>> {
-        let mut vars = vec![];
-        self.dump_vars_internal(&mut vars);
-        vars.sort_unstable();
-        vars
-    }
-
-    fn dump_vars_internal<'a>(&'a self, vars: &mut Vec<&'a Nnf<V>>) {
-        match self {
-            var @ Nnf::Var(_, _) => {
-                vars.push(var);
-            }
-            Nnf::And(children) | Nnf::Or(children) => {
-                children.iter().for_each(|child| child.dump_vars_internal(vars));
-            }
-        }
     }
 }
 
@@ -312,6 +330,19 @@ impl<V: Display> Display for Nnf<V> {
     }
 }
 
+impl<'a, T: Ord> BuildTruthTable<'a, T> for Nnf<T> {
+    fn build_truth_table(&'a self) -> TruthTable<'a, T> {
+        let mut tt = TruthTable::from(self.extract_vars());
+
+        for arrangement in 0..(1 << tt.num_vars()) {
+            let evaluate_result = self.evaluate_with(&tt.var_to_index_map, arrangement);
+            tt.add_row(arrangement, evaluate_result);
+        }
+
+        tt
+    }
+}
+
 pub mod macros {
     #[macro_export]
     macro_rules! var {
@@ -393,8 +424,11 @@ pub mod macros {
 
 #[cfg(test)]
 mod test {
+    use std::collections::BTreeSet;
     use std::ops::Not;
+
     use crate::*;
+    use crate::traits::BuildTruthTable;
 
     #[test]
     fn test_bit_and_operators() {
@@ -553,14 +587,17 @@ mod test {
     }
 
     #[test]
-    fn test_export_vars() {
+    fn test_extract_vars() {
         let sentence = or!(
             var!("a"),
-            or!(var!("!b"), and!("!c"))
+            or!(var!("!b"), and!("!c")),
+            and!("a", "d")
         );
         assert_eq!(
-            sentence.export_vars(),
-            [&var!("a"), &var!("!b"), &var!("!c")]
+            sentence.extract_vars(),
+            BTreeSet::from([
+                &"a", &"b", &"c", &"d"
+            ])
         );
     }
 
@@ -609,5 +646,40 @@ mod test {
 
         assert_ne!(var!("a"), and!("!b"));
         assert_ne!(var!("a"), or!("!b"));
+    }
+
+    #[test]
+    fn test_truth_table() {
+        let sentence = and!(
+            or!("!a", "!b"),
+            or!("c", "d")
+        );
+
+        assert_eq!(
+            sentence.build_truth_table().to_matrix(),
+            [
+                // a      b      c      d      =
+                [false, false, false, false, false],
+                [false, false, false, true, true],
+                [false, false, true, false, true],
+                [false, false, true, true, true],
+                [false, true, false, false, false],
+                [false, true, false, true, true],
+                [false, true, true, false, true],
+                [false, true, true, true, true],
+                [true, false, false, false, false],
+                [true, false, false, true, true],
+                [true, false, true, false, true],
+                [true, false, true, true, true],
+                [true, true, false, false, false],
+                [true, true, false, true, false],
+                [true, true, true, false, false],
+                [true, true, true, true, false],
+            ]
+        );
+
+        for row in sentence.build_truth_table().to_matrix() {
+            println!("{:?}", row);
+        }
     }
 }

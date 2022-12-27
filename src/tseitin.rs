@@ -99,7 +99,7 @@ mod tests {
     use std::collections::BTreeSet;
 
     use crate::nnf::Nnf;
-    use crate::traits::Render;
+    use crate::traits::{BuildTruthTable, Render};
     use crate::tseitin::TseitinTransform;
     use crate::{and, or, var};
 
@@ -116,7 +116,16 @@ mod tests {
 
     #[test]
     fn test_complex() {
-        let sentence = or!(and!(var!("a"), and!("b", "c")), and!(or!("!d", "e"), and!("f", "!g")));
+        let sentence = or!(
+            and!(
+                var!("a"),
+                and!("b", "c")
+            ),
+            and!(
+                or!("!d", "e"),
+                and!("f", "!g")
+            )
+        );
         assert!(!sentence.render().is_empty());
 
         assert!(!sentence.is_cnf(), "Expression is not a cnf yet");
@@ -266,5 +275,31 @@ mod tests {
                 or!("aux_0", "!b", "!c")
             )
         )
+    }
+
+    #[test]
+    fn test_transformation_is_identical() {
+        let sentence = or!(
+            and!(
+                var!("a"),
+                and!("b", "c")
+            ),
+            and!(
+                or!("!d", "e"),
+                and!("f", "!g")
+            )
+        );
+        let original_truth_table = sentence.build_truth_table();
+
+        let transformed_sentence = transform(sentence.clone());
+        let transformed_truth_table = transformed_sentence.build_truth_table();
+
+        let vars = original_truth_table.extract_intersecting_vars(&transformed_truth_table);
+        assert_eq!(
+            vars,
+            BTreeSet::from([&"a", &"b", &"c", &"d", &"e", &"f", &"g"])
+        );
+
+        assert!(original_truth_table.is_identical(&transformed_truth_table));
     }
 }
