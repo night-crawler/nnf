@@ -3,8 +3,8 @@ use std::fmt::Display;
 
 use dot_writer::{Attributes, DotWriter, NodeId, Scope};
 
-use crate::parse_tree::ExpressionNode;
 use crate::nnf::Nnf;
+use crate::parse_tree::ExpressionNode;
 use crate::traits::Render;
 
 pub fn traverse_expression_node<T: Display>(

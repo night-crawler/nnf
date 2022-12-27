@@ -4,7 +4,7 @@ use std::fmt::{Debug, Display, Formatter};
 use std::ops::{BitAnd, BitOr, Not};
 
 use crate::{and, or};
-use crate::traits::{BuildTruthTable};
+use crate::traits::BuildTruthTable;
 use crate::truth_table::TruthTable;
 
 #[derive(Debug, Clone)]

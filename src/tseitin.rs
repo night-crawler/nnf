@@ -11,7 +11,7 @@ pub struct TseitinTransform<A, V> {
 
 impl<A, V> TseitinTransform<A, V>
     where
-        A: FnMut() -> Nnf<V>,
+        A: FnMut(&Nnf<V>) -> Nnf<V>,
         V: Ord + Clone,
 {
     pub fn new(aux_factory: A) -> Self {
@@ -52,7 +52,7 @@ impl<A, V> TseitinTransform<A, V>
                 Nnf::or(children.into_iter().map(|child| self.process_node(child)))
             }
         };
-        let aux = (self.aux_factory)();
+        let aux = (self.aux_factory)(&processed_node);
 
         match processed_node {
             Nnf::And(_) if processed_node.has_inversions() => {
@@ -98,14 +98,14 @@ impl<A, V> TseitinTransform<A, V>
 mod tests {
     use std::collections::BTreeSet;
 
+    use crate::{and, or, var};
     use crate::nnf::Nnf;
     use crate::traits::{BuildTruthTable, Render};
     use crate::tseitin::TseitinTransform;
-    use crate::{and, or, var};
 
     fn transform(sentence: Nnf<&'static str>) -> Nnf<&'static str> {
         let mut counter = 0;
-        let transformer = TseitinTransform::new(|| {
+        let transformer = TseitinTransform::new(|_| {
             let name: &'static str = Box::leak(Box::new(format!("aux_{}", counter)));
             counter += 1;
             var!(name)
