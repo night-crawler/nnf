@@ -5,9 +5,12 @@ Negation Normal Form manipulation library
 ### Macro & bit operations
 
 ```rust
-let a = Nnf::Var("a", true);
-let b = var!("b", false);
-let or = or!(a.clone(), b.clone());
+fn sample() {
+    let a = Nnf::Var("a", true);
+    let b = var!("b", false);
+    let or = or!(a.clone(), b.clone());
+}
+
 ```
 
 ### Simple operations optimization
@@ -31,25 +34,25 @@ fn transform(sentence: Nnf<&'static str>) -> Nnf<&'static str> {
     transformer.transform(sentence)
 }
 
+fn test() {
+    let sentence = or!(
+        and!(
+            var!("a"),
+            and!("b", "c")
+        ),
+        and!(
+            or!("!d", "e"),
+            and!("f", "!g")
+        )
+    );
+    assert!(!sentence.is_cnf(), "Expression is not a cnf yet");
 
-let sentence = or!(
-    and!(
-        var!("a"),
-        and!("b", "c")
-    ),
-    and!(
-        or!("!d", "e"),
-        and!("f", "!g")
-    )
-);
-assert!(!sentence.is_cnf(), "Expression is not a cnf yet");
+    let sentence = transform(sentence);
+    assert!(sentence.is_cnf(), "Expression must be in the cnf form after transformation");
 
-let sentence = transform(sentence);
-assert!(sentence.is_cnf(), "Expression must be in the cnf form after transformation");
-
-assert_eq!(
-    sentence,
-    and!(
+    assert_eq!(
+        sentence,
+        and!(
         or!("a", "!aux_1"),
         or!("aux_0", "!aux_1"),
         or!("aux_1", "aux_4"),
@@ -67,7 +70,8 @@ assert_eq!(
         or!("!aux_3", "!d", "e"),
         or!("aux_2", "!f", "g")
     )
-);
+    );
+}
 ```
 
 ## Parse Tree
@@ -75,19 +79,20 @@ assert_eq!(
 ### Macro support
 
 ```rust
-let root = ExpressionNode::Not(
-    ExpressionNode::And(
-        ExpressionNode::Or(
-            ExpressionNode::Leaf(1).into(),
-            ExpressionNode::Leaf(2).into(),
-        ).into(),
+fn test() {
+    let root = ExpressionNode::Not(
         ExpressionNode::And(
-            ExpressionNode::Leaf(3).into(),
-            ExpressionNode::Leaf(4).into(),
-        ).into(),
-    ).into());
+            ExpressionNode::Or(
+                ExpressionNode::Leaf(1).into(),
+                ExpressionNode::Leaf(2).into(),
+            ).into(),
+            ExpressionNode::And(
+                ExpressionNode::Leaf(3).into(),
+                ExpressionNode::Leaf(4).into(),
+            ).into(),
+        ).into());
 
-let root = e_not!(
+    let root = e_not!(
     e_and!(
         e_or!(
             e_leaf!(1),
@@ -99,9 +104,10 @@ let root = e_not!(
         )
     )
 );
+}
 ```
 
-### Expression Tree to NNF conversion (De Morgan's Law, double nengation, etc.)
+### Expression Tree to NNF conversion (De Morgan's Law, double negation, etc.)
 
 ```rust
 assert_eq!(
@@ -118,5 +124,23 @@ assert_eq!(
     !ExpressionNode::Not(e_or!(e_leaf!(true), e_leaf!(true)).into()),
     e_or!(e_leaf!(true), e_leaf!(true))
 );
+```
+
+## (Optional) Render / Graphviz
+
+```rust
+fn test() {
+    let sentence = or!(
+            and!(
+                var!("a"),
+                and!("b", "c")
+            ),
+            and!(
+                or!("!d", "e"),
+                and!("f", "!g")
+            )
+        );
+    assert!(!sentence.render().is_empty());
+}
 ```
 
