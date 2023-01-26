@@ -53,23 +53,23 @@ fn test() {
     assert_eq!(
         sentence,
         and!(
-        or!("a", "!aux_1"),
-        or!("aux_0", "!aux_1"),
-        or!("aux_1", "aux_4"),
-        or!("aux_2", "!aux_4"),
-        or!("aux_3", "!aux_4"),
-        or!("!aux_0", "b"),
-        or!("!aux_0", "c"),
-        or!("aux_3", "d"),
-        or!("aux_3", "!e"),
-        or!("!aux_2", "f"),
-        or!("!aux_2", "!g"),
-        or!("!a", "!aux_0", "aux_1"),
-        or!("!aux_2", "!aux_3", "aux_4"),
-        or!("aux_0", "!b", "!c"),
-        or!("!aux_3", "!d", "e"),
-        or!("aux_2", "!f", "g")
-    )
+            or!("a", "!aux_1"),
+            or!("aux_0", "!aux_1"),
+            or!("aux_1", "aux_4"),
+            or!("aux_2", "!aux_4"),
+            or!("aux_3", "!aux_4"),
+            or!("!aux_0", "b"),
+            or!("!aux_0", "c"),
+            or!("aux_3", "d"),
+            or!("aux_3", "!e"),
+            or!("!aux_2", "f"),
+            or!("!aux_2", "!g"),
+            or!("!a", "!aux_0", "aux_1"),
+            or!("!aux_2", "!aux_3", "aux_4"),
+            or!("aux_0", "!b", "!c"),
+            or!("!aux_3", "!d", "e"),
+            or!("aux_2", "!f", "g")
+        )
     );
 }
 ```
