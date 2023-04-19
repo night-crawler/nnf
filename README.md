@@ -1,5 +1,9 @@
 # nnf
 
+[![crates.io](https://img.shields.io/crates/v/nnf.svg)](https://crates.io/crates/nnf)
+[![Rust](https://github.com/night-crawler/nnf/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/night-crawler/nnf/actions/workflows/rust.yml)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+
 Negation Normal Form manipulation library
 
 ### Macro & bit operations
